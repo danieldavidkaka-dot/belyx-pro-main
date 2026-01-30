@@ -1,0 +1,148 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Camera, User, Mail, Phone, MapPin, Save, Loader2 } from 'lucide-react';
+
+export default function ClientEditProfile() {
+  const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Estado del formulario (Datos iniciales simulados)
+  const [formData, setFormData] = useState({
+    name: 'Daniel Barrios',
+    email: 'daniel@belyx.com',
+    phone: '+58 412 123 4567',
+    address: 'Caracas, Venezuela',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    
+    // Simulamos petición al backend
+    setTimeout(() => {
+      setIsSaving(false);
+      navigate('/profile'); // Regresa al perfil actualizado
+    }, 1500);
+  };
+
+  return (
+    <div className="bg-slate-50 min-h-screen pb-24 font-sans text-slate-900 relative">
+      
+      {/* HEADER */}
+      <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
+         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+             <ChevronLeft size={24} />
+         </button>
+         <h1 className="font-bold text-lg">Editar Perfil</h1>
+         <div className="w-8" /> 
+      </div>
+
+      <form onSubmit={handleSave} className="p-6 space-y-6">
+        
+        {/* PHOTO UPLOAD */}
+        <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+                <img 
+                    src={formData.image} 
+                    alt="Profile" 
+                    className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md"
+                />
+                <button type="button" className="absolute bottom-0 right-0 bg-[#111] text-white p-2 rounded-full hover:bg-slate-800 transition shadow-sm">
+                    <Camera size={18} />
+                </button>
+            </div>
+            <p className="text-xs text-slate-400">Toca la cámara para cambiar foto</p>
+        </div>
+
+        {/* FORM FIELDS */}
+        <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-5">
+            
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Nombre Completo</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
+                    <User size={18} className="text-slate-400" />
+                    <input 
+                        type="text" 
+                        name="name"
+                        value={formData.name} 
+                        onChange={handleChange}
+                        className="bg-transparent w-full text-sm font-medium text-slate-900 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Correo Electrónico</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
+                    <Mail size={18} className="text-slate-400" />
+                    <input 
+                        type="email" 
+                        name="email"
+                        value={formData.email} 
+                        onChange={handleChange}
+                        className="bg-transparent w-full text-sm font-medium text-slate-900 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Teléfono</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
+                    <Phone size={18} className="text-slate-400" />
+                    <input 
+                        type="tel" 
+                        name="phone"
+                        value={formData.phone} 
+                        onChange={handleChange}
+                        className="bg-transparent w-full text-sm font-medium text-slate-900 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Ubicación Principal</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
+                    <MapPin size={18} className="text-slate-400" />
+                    <input 
+                        type="text" 
+                        name="address"
+                        value={formData.address} 
+                        onChange={handleChange}
+                        className="bg-transparent w-full text-sm font-medium text-slate-900 focus:outline-none"
+                    />
+                </div>
+            </div>
+
+        </div>
+
+        {/* SAVE BUTTON */}
+        <div className="pt-4">
+            <button 
+                type="submit" 
+                disabled={isSaving}
+                className="w-full bg-[#111] hover:bg-slate-800 text-white py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+                {isSaving ? (
+                    <>
+                        <Loader2 size={20} className="animate-spin" />
+                        Guardando...
+                    </>
+                ) : (
+                    <>
+                        <Save size={20} />
+                        Guardar Cambios
+                    </>
+                )}
+            </button>
+        </div>
+
+      </form>
+    </div>
+  );
+}
