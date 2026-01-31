@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ChevronLeft, MapPin, Calendar, MessageCircle, Phone, XCircle, RotateCcw } from 'lucide-react';
 
 const MOCK_DETAILS = {
@@ -32,8 +32,13 @@ const MOCK_DETAILS = {
   }
 };
 
-export default function BookingDetails() {
-  const navigate = useNavigate();
+interface BookingDetailsProps {
+  onBack: () => void;
+  onCancel: () => void;
+  onTrack: () => void;
+}
+
+export default function BookingDetails({ onBack, onCancel, onTrack }: BookingDetailsProps) {
   const { id } = useParams();
 
   return (
@@ -41,7 +46,7 @@ export default function BookingDetails() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Booking #{id || MOCK_DETAILS.id}</h1>
@@ -109,14 +114,14 @@ export default function BookingDetails() {
         {/* ACTIONS (CONECTADAS) */}
         <div className="grid grid-cols-2 gap-4 pt-4">
             <button 
-                onClick={() => navigate('/select-pro')} // Reagendar: Vuelve a seleccionar
+                onClick={onTrack} // Usamos onTrack para simular seguimiento o reagendar
                 className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200 p-4 rounded-2xl text-slate-600 font-bold text-sm hover:bg-slate-50 transition"
             >
                 <RotateCcw size={20} />
-                Reschedule
+                Track / Rebook
             </button>
             <button 
-                onClick={() => navigate(`/cancel/${id}`)} // Cancelar: Va a la pantalla de cancelación
+                onClick={onCancel} 
                 className="flex flex-col items-center justify-center gap-2 bg-red-50 border border-red-100 p-4 rounded-2xl text-red-600 font-bold text-sm hover:bg-red-100 transition"
             >
                 <XCircle size={20} />

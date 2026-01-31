@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export default function CancelBooking() {
-  const navigate = useNavigate();
-  const { id } = useParams();
+interface CancelBookingProps {
+  onBack: () => void;
+}
+
+export default function CancelBooking({ onBack }: CancelBookingProps) {
   
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -26,7 +27,7 @@ export default function CancelBooking() {
     
     // Después de 2 segundos, volvemos a mis reservas
     setTimeout(() => {
-        navigate('/bookings');
+        onBack(); // O navegar a home
     }, 2000);
   };
 
@@ -47,7 +48,7 @@ export default function CancelBooking() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Cancelar Reserva</h1>
@@ -109,7 +110,7 @@ export default function CancelBooking() {
               Confirmar Cancelación
           </button>
           <button 
-             onClick={() => navigate(-1)}
+             onClick={onBack}
              className="w-full bg-white border border-slate-200 text-slate-700 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-colors"
           >
               Mantener Reserva

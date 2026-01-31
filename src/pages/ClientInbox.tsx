@@ -2,7 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Calendar, Tag, Info, CheckCircle2 } from 'lucide-react';
 
-export default function ClientInbox() {
+interface ClientInboxProps {
+  onBack: () => void;
+}
+
+export default function ClientInbox({ onBack }: ClientInboxProps) {
   const navigate = useNavigate();
 
   // Datos simulados de notificaciones
@@ -66,7 +70,7 @@ export default function ClientInbox() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Bandeja de Entrada</h1>

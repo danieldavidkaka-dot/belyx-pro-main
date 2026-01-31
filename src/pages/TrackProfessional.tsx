@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MoreHorizontal, Phone, MessageSquare, Car, Star, Navigation } from 'lucide-react';
+import { useBooking } from '../context/BookingContext'; // <--- El Cerebro
 
 // --- INTERFACES ---
 interface TripData {
@@ -42,19 +44,25 @@ const MOCK_PRO: ProfessionalData = {
   }
 };
 
-interface TrackProfessionalProps {
-  onBack: () => void;      // Para volver atrás real
-  onCall: () => void;      // Para hacer la llamada
-  onArrival: () => void;   // Para avanzar a Verificación (Simulación)
-}
-
-export default function TrackProfessional({ onBack, onCall, onArrival }: TrackProfessionalProps) {
+export default function TrackProfessional() {
+  const navigate = useNavigate();
+  const { booking } = useBooking(); // Obtenemos datos reales del contexto
+  
   const [pulse, setPulse] = useState(false);
   
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleArrival = () => {
+      // Navegamos a la pantalla de verificación
+      navigate('/verify-service');
+  };
+
+  const handleCall = () => {
+      alert("Calling professional...");
+  };
 
   return (
     <div className="relative h-screen w-full bg-slate-900 overflow-hidden font-sans">
@@ -71,7 +79,7 @@ export default function TrackProfessional({ onBack, onCall, onArrival }: TrackPr
 
       {/* 2. HEADER */}
       <div className="absolute top-0 w-full p-4 flex justify-between items-center z-20 pt-12">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-900/80 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-lg hover:bg-slate-800 transition">
+        <button onClick={() => navigate(-1)} className="w-10 h-10 bg-slate-900/80 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-lg hover:bg-slate-800 transition">
           <ArrowLeft size={20} />
         </button>
         <h1 className="text-white font-bold text-lg drop-shadow-md">En Route</h1>
@@ -83,7 +91,7 @@ export default function TrackProfessional({ onBack, onCall, onArrival }: TrackPr
       {/* 3. BOTÓN DE DEMO (SIMULAR LLEGADA) */}
       <div className="absolute top-24 right-4 z-50">
         <button 
-            onClick={onArrival}
+            onClick={handleArrival}
             className="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl animate-bounce"
         >
             Simulate Arrival 📍
@@ -140,10 +148,11 @@ export default function TrackProfessional({ onBack, onCall, onArrival }: TrackPr
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-white font-bold text-sm">{MOCK_PRO.name}</h3>
+                {/* AQUI MOSTRAMOS EL NOMBRE REAL DEL CONTEXTO SI EXISTE */}
+                <h3 className="text-white font-bold text-sm">{booking.professionalName || MOCK_PRO.name}</h3>
                 <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">PRO</span>
               </div>
-              <p className="text-slate-400 text-xs mt-0.5">{MOCK_PRO.role}</p>
+              <p className="text-slate-400 text-xs mt-0.5">{booking.serviceName || MOCK_PRO.role}</p>
               <div className="flex items-center gap-1 text-[10px] text-yellow-500 mt-1">
                 <span className="font-bold">{MOCK_PRO.rating}</span>
                 <span>• 214 jobs</span>
@@ -157,9 +166,8 @@ export default function TrackProfessional({ onBack, onCall, onArrival }: TrackPr
         </div>
 
         <div className="flex gap-4">
-          {/* BOTÓN CALL: Ahora ejecuta onCall */}
           <button 
-            onClick={onCall}
+            onClick={handleCall}
             className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-900/20 active:scale-95"
           >
             <Phone size={20} />

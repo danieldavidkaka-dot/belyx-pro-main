@@ -8,17 +8,19 @@ import { ProMapCard } from '../components/ProMapCard';
 
 interface HomeProps {
   onLogout?: () => void;
-  onSalonSelect?: () => void;
+  // onSalonSelect ya no es necesario, lo manejamos internamente
   onNavigate: (screen: 'home' | 'bookings' | 'wallet' | 'profile') => void;
 }
 
-export const Home = ({ onLogout, onSalonSelect, onNavigate }: HomeProps) => {
+export const Home = ({ onLogout, onNavigate }: HomeProps) => {
   const navigate = useNavigate();
+  
+  // Estado para controlar el modo (Salon o Home)
   const [activeTab, setActiveTab] = useState<'salon' | 'home'>('salon');
 
-  // Función auxiliar para navegar guardando el modo
+  // Función Mágica: Navega y pasa el MODO elegido
   const goToServices = () => {
-    navigate('/services', { state: { mode: activeTab } }); // <--- CLAVE: Enviamos el modo
+    navigate('/booking/services', { state: { mode: activeTab } }); 
   };
 
   return (
@@ -51,7 +53,7 @@ export const Home = ({ onLogout, onSalonSelect, onNavigate }: HomeProps) => {
           </button>
         </div>
 
-        {/* SWITCH */}
+        {/* SWITCH DE MODO */}
         <div className="flex bg-slate-100 p-1 rounded-xl mb-6 relative z-10">
           <button onClick={() => setActiveTab('salon')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'salon' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>In Salon</button>
           <button onClick={() => setActiveTab('home')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-[#00D4FF] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>At Home</button>
@@ -63,18 +65,19 @@ export const Home = ({ onLogout, onSalonSelect, onNavigate }: HomeProps) => {
 
       {activeTab === 'salon' ? (
         <>
+            {/* SALON CONTENT */}
             <div className="pl-6 mb-8 animate-fade-in">
                 <div className="flex justify-between items-center pr-6 mb-4">
                     <h2 className="font-bold text-lg text-slate-900 flex items-center gap-2"><span className="text-[#8B31FF]">✨</span> AI Picks For You</h2>
                     <button className="text-xs font-bold text-[#00D4FF] hover:underline">View all</button>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 pr-6 snap-x hide-scrollbar">
-                     <button onClick={goToServices} className="active:scale-95 transition-transform text-left">
+                      <button onClick={goToServices} className="active:scale-95 transition-transform text-left">
                         <ServiceCard title="Hydro-Glow Facial" salonName="LuxeSpa Downtown" price="120" matchScore={98} image="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=400" />
-                     </button>
-                     <button onClick={goToServices} className="active:scale-95 transition-transform text-left">
+                      </button>
+                      <button onClick={goToServices} className="active:scale-95 transition-transform text-left">
                         <ServiceCard title="Cryo-Manicure" salonName="Nail Lab Tech" price="65" matchScore={92} image="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80&w=400" />
-                     </button>
+                      </button>
                 </div>
             </div>
             
@@ -97,22 +100,25 @@ export const Home = ({ onLogout, onSalonSelect, onNavigate }: HomeProps) => {
             </div>
         </>
       ) : (
-        <div className="px-6 animate-fade-in">
-            <div className="flex items-center gap-2 mb-4"><span className="text-purple-500 font-bold tracking-widest text-sm">BELYX</span><span className="text-slate-900 font-bold text-lg">AI Recommended</span></div>
-            <button onClick={goToServices} className="w-full active:scale-[0.98] transition-transform text-left"><HeroCard title="Manicure Spa" subtitle="Based on your visit 3 weeks ago" rating={4.9} reviews={120} time="45m" image="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=800" /></button>
-            <div className="mb-8">
-                <h3 className="font-bold text-slate-900 mb-4 text-lg">Services</h3>
-                <div className="flex justify-between">
-                    {[{ name: 'Hair', icon: '✂️' }, { name: 'Massage', icon: '🌿' }, { name: 'Nails', icon: '💅' }, { name: 'Facial', icon: '🎭' }, { name: 'Yoga', icon: '🧘‍♀️' }].map((s) => (
-                        <button key={s.name} onClick={goToServices} className="flex flex-col items-center gap-2 group cursor-pointer active:scale-90 transition-transform">
-                            <div className="w-14 h-14 bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center justify-center text-2xl group-hover:border-purple-200 group-hover:bg-purple-50 transition-colors">{s.icon}</div>
-                            <span className="text-xs font-medium text-slate-500">{s.name}</span>
-                        </button>
-                    ))}
+        <>
+            {/* HOME CONTENT */}
+            <div className="px-6 animate-fade-in">
+                <div className="flex items-center gap-2 mb-4"><span className="text-purple-500 font-bold tracking-widest text-sm">BELYX</span><span className="text-slate-900 font-bold text-lg">AI Recommended</span></div>
+                <button onClick={goToServices} className="w-full active:scale-[0.98] transition-transform text-left"><HeroCard title="Manicure Spa" subtitle="Based on your visit 3 weeks ago" rating={4.9} reviews={120} time="45m" image="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=800" /></button>
+                <div className="mb-8">
+                    <h3 className="font-bold text-slate-900 mb-4 text-lg">Services</h3>
+                    <div className="flex justify-between">
+                        {[{ name: 'Hair', icon: '✂️' }, { name: 'Massage', icon: '🌿' }, { name: 'Nails', icon: '💅' }, { name: 'Facial', icon: '🎭' }, { name: 'Yoga', icon: '🧘‍♀️' }].map((s) => (
+                            <button key={s.name} onClick={goToServices} className="flex flex-col items-center gap-2 group cursor-pointer active:scale-90 transition-transform">
+                                <div className="w-14 h-14 bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center justify-center text-2xl group-hover:border-purple-200 group-hover:bg-purple-50 transition-colors">{s.icon}</div>
+                                <span className="text-xs font-medium text-slate-500">{s.name}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
+                <div><div className="flex justify-between items-center mb-4"><h2 className="font-bold text-lg text-slate-900">Pros near you</h2><span className="text-xs font-bold text-purple-600">View Map</span></div><ProMapCard /></div>
             </div>
-            <div><div className="flex justify-between items-center mb-4"><h2 className="font-bold text-lg text-slate-900">Pros near you</h2><span className="text-xs font-bold text-purple-600">View Map</span></div><ProMapCard /></div>
-        </div>
+        </>
       )}
       <BottomNav activeTab="home" onNavigate={onNavigate} />
     </div>

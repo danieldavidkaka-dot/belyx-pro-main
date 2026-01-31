@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Camera, User, Mail, Phone, MapPin, Save, Loader2 } from 'lucide-react';
 
-export default function ClientEditProfile() {
+interface ClientEditProfileProps {
+  onBack: () => void;
+}
+
+export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -36,7 +40,7 @@ export default function ClientEditProfile() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Editar Perfil</h1>

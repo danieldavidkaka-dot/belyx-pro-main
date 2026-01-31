@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Bell, Mail, MessageSquare, Tag, Calendar, Shield } from 'lucide-react';
 
-export default function ClientNotifications() {
-  const navigate = useNavigate();
+interface ClientNotificationsProps {
+  onBack: () => void;
+}
+
+export default function ClientNotifications({ onBack }: ClientNotificationsProps) {
 
   // Estados de los interruptores
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -20,7 +22,7 @@ export default function ClientNotifications() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Notificaciones</h1>

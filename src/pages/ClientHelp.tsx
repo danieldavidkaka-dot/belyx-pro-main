@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, ChevronDown, ChevronUp, MessageCircle, Mail, Phone } from 'lucide-react';
 
-export default function ClientHelp() {
-  const navigate = useNavigate();
+interface ClientHelpProps {
+  onBack: () => void;
+}
+
+export default function ClientHelp({ onBack }: ClientHelpProps) {
   const [openQuestion, setOpenQuestion] = useState<number | null>(null);
 
   const faqs = [
@@ -38,7 +40,7 @@ export default function ClientHelp() {
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
          <h1 className="font-bold text-lg">Centro de Ayuda</h1>
