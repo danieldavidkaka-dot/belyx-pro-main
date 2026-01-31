@@ -33,6 +33,7 @@ import ClientPaymentMethods from './pages/ClientPaymentMethods';
 import ClientSecurity from './pages/ClientSecurity';
 import ClientHelp from './pages/ClientHelp';
 import ClientNotifications from './pages/ClientNotifications';
+import ClientSettings from './pages/ClientSettings'; // <--- NUEVA IMPORTACIÓN
 
 // Páginas Staff
 import StaffLogin from './pages/StaffLogin';
@@ -80,7 +81,8 @@ export const AppRoutes = () => {
         {/* Perfil */}
         <Route path={PATHS.CLIENT.PROFILE} element={<ClientProfile onLogout={handleLogout} onNavigate={handleNavigate} />} />
         <Route path="/profile/edit" element={<ClientEditProfile onBack={() => navigate(-1)} />} />
-        <Route path="/profile/payments" element={<ClientPaymentMethods onBack={() => navigate(-1)} />} />
+        <Route path="/profile/payments" element={<ClientPaymentMethods />} /> {/* SIN PROPS */}
+        <Route path="/profile/settings" element={<ClientSettings />} /> {/* <--- NUEVA RUTA */}
         <Route path="/profile/security" element={<ClientSecurity onBack={() => navigate(-1)} />} />
         <Route path="/profile/help" element={<ClientHelp onBack={() => navigate(-1)} />} />
         <Route path="/profile/notifications" element={<ClientNotifications onBack={() => navigate(-1)} />} />
@@ -96,7 +98,7 @@ export const AppRoutes = () => {
       <Route path="/booking/confirm" element={<ConfirmBooking />} />
       <Route path="/booking/success" element={<BookingSuccess />} />
       
-      {/* DETALLES Y TRACKING (CORREGIDO: Sin props) */}
+      {/* DETALLES Y TRACKING (Sin props) */}
       <Route path="/booking-details/:id" element={<BookingDetails />} />
       <Route path="/track-pro" element={<TrackProfessional />} /> 
       

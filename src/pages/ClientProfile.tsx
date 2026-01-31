@@ -29,7 +29,10 @@ export default function ClientProfile({ onLogout, onNavigate }: ClientProfilePro
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
          <h1 className="font-bold text-lg ml-2">Profile</h1>
-         <button className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400">
+         <button 
+            onClick={() => navigate('/profile/settings')} // <--- CONECTADO: Navega a Settings
+            className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400"
+         >
              <Settings size={22} />
          </button>
       </div>

@@ -5,7 +5,8 @@ import { SalonCard } from '../components/SalonCard';
 import { BottomNav } from '../components/BottomNav';
 import { HeroCard } from '../components/HeroCard';
 import { ProMapCard } from '../components/ProMapCard';
-import { useBooking } from '../context/BookingContext'; // <--- 1. Importamos el cerebro
+import { useBooking } from '../context/BookingContext'; // Datos del usuario
+import { useLanguage } from '../context/LanguageContext'; // Traducciones
 
 interface HomeProps {
   onLogout?: () => void;
@@ -14,24 +15,21 @@ interface HomeProps {
 
 export const Home = ({ onLogout, onNavigate }: HomeProps) => {
   const navigate = useNavigate();
-  const { user } = useBooking(); // <--- 2. Obtenemos el usuario real
+  const { user } = useBooking(); // Obtenemos usuario real
+  const { t } = useLanguage(); // Obtenemos traductor
   
-  // Estado para controlar el modo (Salon o Home)
   const [activeTab, setActiveTab] = useState<'salon' | 'home'>('salon');
 
-  // 3. Obtenemos el primer nombre para el saludo
-  // Si user.name es "Daniel Barrios", firstName será "Daniel"
+  // Nombre del usuario para el saludo
   const firstName = user?.name ? user.name.split(' ')[0] : 'Guest';
 
-  // Función genérica: Va a servicios sin filtro (muestra todo)
   const goToServices = () => {
     navigate('/booking/services', { state: { mode: activeTab, category: 'All' } }); 
   };
 
-  // Función Específica: Va a servicios FILTRANDO por categoría
   const goToCategory = (categoryName: string) => {
-    // Mapeamos los nombres visuales a los IDs de categoría del siguiente paso
     let filter = 'All';
+    // Mapeo simple de categorías
     if (categoryName.includes('Hair')) filter = 'Hair';
     if (categoryName.includes('Spa')) filter = 'Massage';
     if (categoryName.includes('Makeup')) filter = 'Makeup';
@@ -54,7 +52,7 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
                 onClick={() => onNavigate('profile')} 
                 className="w-10 h-10 rounded-full overflow-hidden border border-slate-100 transition-transform active:scale-90 hover:ring-2 hover:ring-purple-100 relative z-40"
              >
-                {/* 4. Usamos la imagen real del usuario */}
+                {/* Imagen real del usuario */}
                 <img 
                   src={user?.image || "https://i.pravatar.cc/150?img=5"} 
                   alt="Avatar" 
@@ -66,7 +64,7 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
                 <div className="flex flex-col animate-fade-in">
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Mode</span>
                     <span className="text-sm font-bold text-purple-600 flex items-center gap-1">
-                        At Home 
+                        {t('mode_home')}
                         <span className="w-2 h-2 bg-green-400 rounded-full"></span>
                     </span>
                 </div>
@@ -78,15 +76,19 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
           </button>
         </div>
 
-        {/* SWITCH DE MODO */}
+        {/* SWITCH DE MODO (Traducido) */}
         <div className="flex bg-slate-100 p-1 rounded-xl mb-6 relative z-10">
-          <button onClick={() => setActiveTab('salon')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'salon' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>In Salon</button>
-          <button onClick={() => setActiveTab('home')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-[#00D4FF] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>At Home</button>
+          <button onClick={() => setActiveTab('salon')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'salon' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+            {t('mode_salon')}
+          </button>
+          <button onClick={() => setActiveTab('home')} className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-[#00D4FF] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+            {t('mode_home')}
+          </button>
         </div>
 
-        {/* 5. SALUDO DINÁMICO */}
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Good morning, {firstName}.</h1>
-        <p className="text-slate-400 text-sm mb-4">{activeTab === 'salon' ? 'Ready for your glow up?' : 'Ready for your session?'}</p>
+        {/* SALUDO DINÁMICO Y TRADUCIDO */}
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">{t('greeting')}, {firstName}.</h1>
+        <p className="text-slate-400 text-sm mb-4">{t('ready')}</p>
       </div>
 
       {activeTab === 'salon' ? (
@@ -94,8 +96,12 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
             {/* SALON CONTENT */}
             <div className="pl-6 mb-8 animate-fade-in">
                 <div className="flex justify-between items-center pr-6 mb-4">
-                    <h2 className="font-bold text-lg text-slate-900 flex items-center gap-2"><span className="text-[#8B31FF]">✨</span> AI Picks For You</h2>
-                    <button onClick={goToServices} className="text-xs font-bold text-[#00D4FF] hover:underline">View all</button>
+                    <h2 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+                        <span className="text-[#8B31FF]">✨</span> {t('ai_picks')}
+                    </h2>
+                    <button onClick={goToServices} className="text-xs font-bold text-[#00D4FF] hover:underline">
+                        {t('view_all')}
+                    </button>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 pr-6 snap-x hide-scrollbar">
                       <button onClick={goToServices} className="active:scale-95 transition-transform text-left">
@@ -108,7 +114,7 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
             </div>
             
             <div className="px-6 mb-8 animate-fade-in">
-                <h2 className="font-bold text-lg text-slate-900 mb-4">Browse Categories</h2>
+                <h2 className="font-bold text-lg text-slate-900 mb-4">{t('categories')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                     {[
                         { name: 'Hair Styling', icon: '✂️', bg: 'bg-purple-100', color: 'text-purple-600' }, 
@@ -125,7 +131,10 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
             </div>
 
             <div className="px-6 animate-fade-in">
-                <div className="flex justify-between items-center mb-4"><h2 className="font-bold text-lg text-slate-900">Near You</h2><span className="text-xs text-slate-400">📍 Within 5km</span></div>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="font-bold text-lg text-slate-900">{t('near_you')}</h2>
+                    <span className="text-xs text-slate-400">📍 Within 5km</span>
+                </div>
                 <button onClick={goToServices} className="w-full active:scale-95 transition-transform mb-4 text-left"><SalonCard name="Aura Salon & Spa" address="0.8 km • Open until 8pm" rating={4.9} tags={['Hair', 'Nails']} image="https://images.unsplash.com/photo-1521590832896-7ea867403dab?auto=format&fit=crop&q=80&w=200" /></button>
                 <button onClick={goToServices} className="w-full active:scale-95 transition-transform text-left"><SalonCard name="Zenith Aesthetics" address="1.2 km • Closing soon" rating={4.8} tags={['Skin', 'Laser']} image="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=200" /></button>
             </div>
@@ -134,7 +143,7 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
         <>
             {/* HOME CONTENT */}
             <div className="px-6 animate-fade-in">
-                <div className="flex items-center gap-2 mb-4"><span className="text-purple-500 font-bold tracking-widest text-sm">BELYX</span><span className="text-slate-900 font-bold text-lg">AI Recommended</span></div>
+                <div className="flex items-center gap-2 mb-4"><span className="text-purple-500 font-bold tracking-widest text-sm">BELYX</span><span className="text-slate-900 font-bold text-lg">{t('ai_picks')}</span></div>
                 <button onClick={() => goToCategory('Nails')} className="w-full active:scale-[0.98] transition-transform text-left"><HeroCard title="Manicure Spa" subtitle="Based on your visit 3 weeks ago" rating={4.9} reviews={120} time="45m" image="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=800" /></button>
                 <div className="mb-8">
                     <h3 className="font-bold text-slate-900 mb-4 text-lg">Services</h3>
@@ -153,7 +162,13 @@ export const Home = ({ onLogout, onNavigate }: HomeProps) => {
                         ))}
                     </div>
                 </div>
-                <div><div className="flex justify-between items-center mb-4"><h2 className="font-bold text-lg text-slate-900">Pros near you</h2><span className="text-xs font-bold text-purple-600">View Map</span></div><ProMapCard /></div>
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="font-bold text-lg text-slate-900">Pros {t('near_you')}</h2>
+                        <span className="text-xs font-bold text-purple-600">View Map</span>
+                    </div>
+                    <ProMapCard />
+                </div>
             </div>
         </>
       )}

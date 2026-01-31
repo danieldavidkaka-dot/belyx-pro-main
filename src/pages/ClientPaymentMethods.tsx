@@ -1,23 +1,44 @@
 import React, { useState } from 'react';
-import { ChevronLeft, CreditCard, Plus, Trash2, CheckCircle2, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, CreditCard, Plus, Trash2, CheckCircle, ShieldCheck } from 'lucide-react';
+import { useBooking, PaymentMethod } from '../context/BookingContext'; // <--- Importamos el cerebro
 
-interface ClientPaymentMethodsProps {
-  onBack: () => void;
-}
-
-export default function ClientPaymentMethods({ onBack }: ClientPaymentMethodsProps) {
+export default function ClientPaymentMethods() {
+  const navigate = useNavigate();
+  const { paymentMethods, addPaymentMethod, removePaymentMethod } = useBooking();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Datos simulados
-  const [cards, setCards] = useState([
-    { id: 1, type: 'Visa', last4: '4242', exp: '12/25', isDefault: true },
-    { id: 2, type: 'Mastercard', last4: '8899', exp: '09/24', isDefault: false },
-  ]);
+  // Estado para el formulario de nueva tarjeta
+  const [newCard, setNewCard] = useState({
+    number: '',
+    holder: '',
+    expiry: '',
+    cvc: ''
+  });
 
-  const handleDelete = (id: number) => {
-    if (confirm('¿Estás seguro de eliminar esta tarjeta?')) {
-        setCards(cards.filter(c => c.id !== id));
-    }
+  const handleAddCard = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Simulamos la detección del tipo de tarjeta
+    const type = Math.random() > 0.5 ? 'visa' : 'mastercard';
+    const last4 = newCard.number.slice(-4) || '0000';
+
+    const cardToAdd: PaymentMethod = {
+        id: Date.now().toString(),
+        type: type,
+        last4: last4,
+        expiry: newCard.expiry || '12/28',
+        cardHolder: newCard.holder || 'Valued Client',
+        isDefault: paymentMethods.length === 0 // Si es la primera, es default
+    };
+
+    addPaymentMethod(cardToAdd);
+    setShowAddForm(false);
+    setNewCard({ number: '', holder: '', expiry: '', cvc: '' }); // Reset form
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewCard({ ...newCard, [e.target.name]: e.target.value });
   };
 
   return (
@@ -25,10 +46,10 @@ export default function ClientPaymentMethods({ onBack }: ClientPaymentMethodsPro
       
       {/* HEADER */}
       <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
+         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
-         <h1 className="font-bold text-lg">Métodos de Pago</h1>
+         <h1 className="font-bold text-lg">Payment Methods</h1>
          <div className="w-8" /> 
       </div>
 
@@ -36,111 +57,120 @@ export default function ClientPaymentMethods({ onBack }: ClientPaymentMethodsPro
         
         {/* LISTA DE TARJETAS */}
         <div className="space-y-4">
-            <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Tus Tarjetas</h3>
-            
-            {cards.map((card) => (
-                <div key={card.id} className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative group overflow-hidden">
-                    <div className="flex justify-between items-start mb-6">
-                        {/* Icono de Marca */}
-                        <div className={`w-12 h-8 rounded-md flex items-center justify-center text-white text-[10px] font-bold tracking-wider shadow-sm ${
-                            card.type === 'Visa' ? 'bg-blue-600' : 'bg-orange-500'
-                        }`}>
-                            {card.type.toUpperCase()}
+            {paymentMethods.length > 0 ? (
+                paymentMethods.map((card) => (
+                    <div key={card.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 relative overflow-hidden group">
+                        {/* Fondo decorativo */}
+                        <div className={`absolute top-0 bottom-0 left-0 w-2 ${card.type === 'visa' ? 'bg-blue-500' : 'bg-orange-500'}`} />
+                        
+                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-xl shrink-0">
+                            {card.type === 'visa' ? '🔵' : '🔴'}
                         </div>
-                        {card.isDefault && (
-                            <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                <CheckCircle2 size={10} /> Principal
-                            </span>
-                        )}
-                    </div>
-                    
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="text-slate-400 text-xs mb-1">Número de tarjeta</p>
-                            <p className="font-mono text-lg font-bold text-slate-700">•••• •••• •••• {card.last4}</p>
+                        
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-slate-900 capitalize">{card.type} •••• {card.last4}</h3>
+                                {card.isDefault && (
+                                    <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Default</span>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-400">Expires {card.expiry}</p>
                         </div>
-                        <div className="text-right">
-                             <p className="text-slate-400 text-xs mb-1">Expira</p>
-                             <p className="font-bold text-slate-700">{card.exp}</p>
-                        </div>
-                    </div>
 
-                    {/* Botón Eliminar (Visible solo al interactuar o siempre visible en móvil con diseño limpio) */}
-                    {!card.isDefault && (
+                        {/* Botón Borrar */}
                         <button 
-                            onClick={() => handleDelete(card.id)}
-                            className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition p-2"
+                            onClick={() => removePaymentMethod(card.id)}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition"
                         >
                             <Trash2 size={18} />
                         </button>
-                    )}
+                    </div>
+                ))
+            ) : (
+                <div className="text-center py-10 opacity-50">
+                    <CreditCard size={48} className="mx-auto mb-2 text-slate-300" />
+                    <p>No cards added yet</p>
                 </div>
-            ))}
+            )}
         </div>
 
-        {/* BOTÓN AGREGAR NUEVA */}
-        {!showAddForm ? (
+        {/* BOTÓN AGREGAR */}
+        {!showAddForm && (
             <button 
                 onClick={() => setShowAddForm(true)}
-                className="w-full py-4 border-2 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-all group"
+                className="w-full py-4 border-2 border-dashed border-slate-300 text-slate-500 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-100 hover:border-slate-400 transition"
             >
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition">
-                    <Plus size={24} />
-                </div>
-                <span className="font-bold text-sm">Agregar Nueva Tarjeta</span>
+                <Plus size={20} /> Add New Card
             </button>
-        ) : (
-            // FORMULARIO DE AGREGAR (SIMULADO)
-            <div className="bg-white p-5 rounded-3xl shadow-lg border border-purple-100 animate-in slide-in-from-bottom-4 duration-500">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-900">Nueva Tarjeta</h3>
-                    <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600 text-xs font-bold">Cancelar</button>
-                </div>
+        )}
+
+        {/* FORMULARIO DE AGREGAR (Toggle) */}
+        {showAddForm && (
+            <div className="bg-white p-6 rounded-[32px] shadow-lg border border-slate-100 animate-in slide-in-from-bottom duration-300">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-green-500" /> Secure Add
+                </h3>
                 
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 ml-1">Número de Tarjeta</label>
-                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-3">
-                            <CreditCard size={18} className="text-slate-400" />
-                            <input type="text" placeholder="0000 0000 0000 0000" className="bg-transparent w-full text-sm font-bold focus:outline-none" />
-                        </div>
+                <form onSubmit={handleAddCard} className="space-y-4">
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Card Number</label>
+                        <input 
+                            name="number"
+                            placeholder="0000 0000 0000 0000" 
+                            className="w-full bg-slate-50 p-4 rounded-xl font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                            maxLength={19}
+                            value={newCard.number}
+                            onChange={handleInputChange}
+                            required
+                        />
                     </div>
                     
                     <div className="flex gap-4">
-                        <div className="space-y-1 flex-1">
-                            <label className="text-xs font-bold text-slate-500 ml-1">Expiración</label>
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                <input type="text" placeholder="MM/YY" className="bg-transparent w-full text-sm font-bold focus:outline-none text-center" />
-                            </div>
+                        <div className="flex-1">
+                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Expiry</label>
+                            <input 
+                                name="expiry"
+                                placeholder="MM/YY" 
+                                className="w-full bg-slate-50 p-4 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                                maxLength={5}
+                                value={newCard.expiry}
+                                onChange={handleInputChange}
+                                required
+                            />
                         </div>
-                        <div className="space-y-1 flex-1">
-                            <label className="text-xs font-bold text-slate-500 ml-1">CVV</label>
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-2">
-                                <Lock size={14} className="text-slate-400" />
-                                <input type="password" placeholder="123" className="bg-transparent w-full text-sm font-bold focus:outline-none text-center" />
-                            </div>
+                        <div className="flex-1">
+                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">CVC</label>
+                            <input 
+                                name="cvc"
+                                placeholder="123" 
+                                type="password"
+                                className="w-full bg-slate-50 p-4 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                                maxLength={3}
+                                value={newCard.cvc}
+                                onChange={handleInputChange}
+                                required
+                            />
                         </div>
                     </div>
 
-                    <button 
-                        onClick={() => {
-                            setCards([...cards, { id: Date.now(), type: 'Visa', last4: '0000', exp: '12/28', isDefault: false }]);
-                            setShowAddForm(false);
-                        }}
-                        className="w-full bg-[#111] text-white py-3 rounded-xl font-bold text-sm mt-2 shadow-lg hover:bg-slate-800 transition"
-                    >
-                        Guardar Tarjeta
-                    </button>
-                </div>
+                    <div className="flex gap-2 pt-2">
+                        <button 
+                            type="button"
+                            onClick={() => setShowAddForm(false)}
+                            className="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            className="flex-[2] bg-[#111] text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:bg-slate-800 transition"
+                        >
+                            <CheckCircle size={18} /> Save Card
+                        </button>
+                    </div>
+                </form>
             </div>
         )}
-
-        <div className="flex items-start gap-2 px-2 opacity-60">
-            <Lock size={12} className="mt-0.5" />
-            <p className="text-[10px] leading-tight">
-                Tus datos están encriptados con seguridad bancaria de 256-bits. No almacenamos tu CVV.
-            </p>
-        </div>
 
       </div>
     </div>

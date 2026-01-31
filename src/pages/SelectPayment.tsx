@@ -1,41 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Smartphone, RefreshCcw, CreditCard, Lock, Plus, Check } from 'lucide-react';
 import { GradientButton } from '../components/GradientButton';
 import { useBooking } from '../context/BookingContext';
-import { PATHS } from '../app/router/paths';
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  detail: string;
-  type: 'pagomovil' | 'zelle' | 'paypal' | 'card';
-}
-
-const MOCK_PAYMENT_METHODS: PaymentMethod[] = [
-  { id: '1', name: 'Pago Móvil', detail: '0414-***-1234 • Banesco', type: 'pagomovil' },
-  { id: '2', name: 'Zelle', detail: 'user@email.com', type: 'zelle' },
-  { id: '3', name: 'PayPal', detail: 'Connect Account', type: 'paypal' },
-];
 
 export default function SelectPayment() {
   const navigate = useNavigate();
-  const { booking, confirmBooking } = useBooking();
+  const { booking, confirmBooking, paymentMethods, setPaymentMethod } = useBooking();
   const price = booking.price || 0; 
-  const [selectedId, setSelectedId] = useState<string>('1');
+  
+  // Estado para la tarjeta seleccionada
+  const [selectedId, setSelectedId] = useState<string>('');
+
+  // Efecto para pre-seleccionar la tarjeta por defecto
+  useEffect(() => {
+    if (paymentMethods.length > 0) {
+        const defaultCard = paymentMethods.find(m => m.isDefault);
+        if (defaultCard) setSelectedId(defaultCard.id);
+        else setSelectedId(paymentMethods[0].id);
+    }
+  }, [paymentMethods]);
 
   const handleConfirm = () => {
+    if (!selectedId) {
+        alert("Please select a payment method");
+        return;
+    }
+    setPaymentMethod(selectedId); // Guardamos la tarjeta usada en la reserva
     confirmBooking();
     navigate('/booking/confirm', { replace: true });
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'pagomovil': return <Smartphone size={24} className="text-purple-600" />;
-      case 'zelle': return <RefreshCcw size={24} className="text-blue-600" />;
-      case 'paypal': return <CreditCard size={24} className="text-slate-600" />;
-      default: return <CreditCard size={24} className="text-slate-600" />;
-    }
+  const handleAddNew = () => {
+      // Navegamos al perfil para agregar tarjeta, pero podríamos pasarle un state para que vuelva aquí
+      navigate('/profile/payments'); 
   };
 
   return (
@@ -68,24 +66,38 @@ export default function SelectPayment() {
         <p className="text-slate-400 text-sm mb-6">Select how you would like to pay for your service.</p>
         
         <div className="space-y-4">
-          {MOCK_PAYMENT_METHODS.map((method) => {
-            const isSelected = selectedId === method.id;
-            return (
-              <div key={method.id} onClick={() => setSelectedId(method.id)} className={`relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group ${isSelected ? 'bg-white border-purple-500 shadow-lg shadow-purple-100' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
-                {isSelected && <div className="absolute inset-0 bg-purple-50 opacity-20 rounded-2xl pointer-events-none"></div>}
-                <div className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-purple-600' : 'border-slate-300'}`}>
-                  {isSelected && <div className="w-3 h-3 rounded-full bg-purple-600" />}
-                </div>
-                <div className="shrink-0 w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center">{getIcon(method.type)}</div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-slate-900">{method.name}</h4>
-                  <p className="text-xs text-slate-500 font-medium">{method.detail}</p>
-                </div>
-                {isSelected && (<div className="bg-purple-600 rounded-full p-1 text-white animate-fade-in-up"><Check size={12} strokeWidth={3} /></div>)}
-              </div>
-            );
-          })}
-          <button className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-4 flex items-center justify-center gap-2 text-slate-900 font-bold hover:bg-slate-50 hover:border-purple-300 transition-colors">
+          {paymentMethods.length > 0 ? (
+              paymentMethods.map((method) => {
+                const isSelected = selectedId === method.id;
+                return (
+                  <div key={method.id} onClick={() => setSelectedId(method.id)} className={`relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group ${isSelected ? 'bg-white border-purple-500 shadow-lg shadow-purple-100' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
+                    {isSelected && <div className="absolute inset-0 bg-purple-50 opacity-20 rounded-2xl pointer-events-none"></div>}
+                    
+                    <div className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-purple-600' : 'border-slate-300'}`}>
+                      {isSelected && <div className="w-3 h-3 rounded-full bg-purple-600" />}
+                    </div>
+                    
+                    <div className="shrink-0 w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center">
+                        {method.type === 'visa' || method.type === 'mastercard' || method.type === 'amex' 
+                            ? <CreditCard size={24} className="text-slate-600" />
+                            : <Smartphone size={24} className="text-purple-600" />
+                        }
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h4 className="font-bold text-slate-900 capitalize">{method.type} •••• {method.last4}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{method.cardHolder}</p>
+                    </div>
+                    
+                    {isSelected && (<div className="bg-purple-600 rounded-full p-1 text-white animate-fade-in-up"><Check size={12} strokeWidth={3} /></div>)}
+                  </div>
+                );
+              })
+          ) : (
+              <div className="text-center py-4 text-slate-400 text-sm">No cards saved yet.</div>
+          )}
+
+          <button onClick={handleAddNew} className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-4 flex items-center justify-center gap-2 text-slate-900 font-bold hover:bg-slate-50 hover:border-purple-300 transition-colors">
             <Plus size={20} className="text-slate-400" /> Add New Method
           </button>
         </div>
@@ -97,7 +109,12 @@ export default function SelectPayment() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent z-20">
-        <GradientButton text={`Confirm Booking $${price.toFixed(2)} →`} fullWidth={true} onClick={handleConfirm} />
+        <GradientButton 
+            text={`Confirm Booking $${price.toFixed(2)} →`} 
+            fullWidth={true} 
+            onClick={handleConfirm}
+            disabled={!selectedId} // Deshabilitar si no hay tarjeta
+        />
       </div>
     </div>
   );
