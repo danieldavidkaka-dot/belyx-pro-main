@@ -1,135 +1,206 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { ChevronLeft, MapPin, Calendar, MessageCircle, Phone, XCircle, RotateCcw } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, Clock, MapPin, Phone, MessageSquare, ShieldCheck, XCircle, Navigation } from 'lucide-react';
+import { useBooking } from '../context/BookingContext'; // <--- 1. Conexión al Cerebro
 
-const MOCK_DETAILS = {
-  id: '#4092',
-  status: 'Confirmed',
-  service: {
-    name: 'Luxury Gel Manicure',
-    price: 45.00,
-    duration: '45 min',
-    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=300'
+// --- MOCKS DE RESPALDO (Para que las reservas de ejemplo funcionen) ---
+const MOCK_DETAILS: any[] = [
+  {
+    id: 'mock-1',
+    serviceName: 'Gel Manicure Deluxe',
+    professionalName: 'Sarah Jenkins',
+    price: 45,
+    date: 'Today',
+    time: '14:00',
+    status: 'confirmed',
+    locationType: 'home',
+    address: '124 Tech Blvd, Apt 4B, San Francisco',
+    professionalImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200'
   },
-  professional: {
-    name: 'Sarah Jenkins',
-    role: 'Top Stylist',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200',
-    phone: '+1 234 567 890'
+  {
+    id: 'mock-2',
+    serviceName: 'Full Body Massage',
+    professionalName: 'Zen Spa Team',
+    price: 80,
+    date: 'Oct 24',
+    time: '10:00',
+    status: 'pending',
+    locationType: 'salon',
+    address: 'Zen Spa & Wellness',
+    professionalImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200'
   },
-  schedule: {
-    date: 'Fri, Oct 20',
-    time: '10:00 AM'
-  },
-  location: {
-    address: '124 Tech Blvd, Apt 4B',
-    city: 'San Francisco, CA',
-    type: 'At Home'
-  },
-  payment: {
-    method: 'Apple Pay (**** 1234)',
-    total: 52.50
+  {
+    id: 'mock-6', // Coincide con el mock de MyBookings
+    serviceName: 'Hair Color Touch-up',
+    professionalName: 'Gloss Salon',
+    price: 120,
+    date: 'Jul 10',
+    time: '09:00',
+    status: 'cancelled',
+    locationType: 'salon',
+    address: 'Gloss Salon',
+    professionalImage: 'https://images.unsplash.com/photo-1560869713-7d0a29430803?q=80&w=200'
   }
-};
+];
 
-interface BookingDetailsProps {
-  onBack: () => void;
-  onCancel: () => void;
-  onTrack: () => void;
-}
+export default function BookingDetails() {
+  const navigate = useNavigate();
+  const { id } = useParams(); // Obtenemos el ID de la URL
+  const { bookingHistory, cancelBooking } = useBooking(); // Traemos historial y función cancelar
 
-export default function BookingDetails({ onBack, onCancel, onTrack }: BookingDetailsProps) {
-  const { id } = useParams();
+  // 2. BUSCAR LA RESERVA (Primero en historial real, luego en mocks)
+  const booking = useMemo(() => {
+    return bookingHistory.find(b => b.id === id) || MOCK_DETAILS.find(b => b.id === id);
+  }, [id, bookingHistory]);
+
+  const handleCancel = () => {
+    if (id) {
+        if(window.confirm("Are you sure you want to cancel this booking?")) {
+            cancelBooking(id);
+            navigate(-1); // Volver atrás
+        }
+    }
+  };
+
+  const handleTrack = () => {
+    navigate('/track-pro');
+  };
+
+  if (!booking) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-4">
+            <p>Booking not found</p>
+            <button onClick={() => navigate(-1)} className="text-purple-600 font-bold">Go Back</button>
+        </div>
+    );
+  }
+
+  // Normalización de datos para visualización
+  const isHome = booking.locationType === 'home' || booking.type === 'At Home';
+  // Normalizar estado (primera letra mayúscula)
+  const rawStatus = booking.status || 'confirmed';
+  const displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+  
+  const displayImage = booking.professionalImage || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=200";
+  const displayName = booking.professionalName || 'Assigned Pro';
+  const displayAddress = booking.address || booking.location || 'Location details pending';
 
   return (
     <div className="bg-slate-50 min-h-screen pb-24 font-sans text-slate-900 relative">
       
-      {/* HEADER */}
-      <div className="bg-white p-4 sticky top-0 z-20 flex items-center justify-between shadow-sm">
-         <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
-             <ChevronLeft size={24} />
-         </button>
-         <h1 className="font-bold text-lg">Booking #{id || MOCK_DETAILS.id}</h1>
-         <div className="w-8" /> 
+      {/* HEADER & MAP PREVIEW */}
+      <div className="relative h-48 bg-slate-200">
+          <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/-122.4194,37.7749,13,0/600x400?access_token=YOUR_KEY')] bg-cover bg-center opacity-60"></div>
+          <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10">
+              <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition">
+                  <ArrowLeft size={20} />
+              </button>
+              <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider">
+                  {id?.startsWith('mock') ? `#${id.split('-')[1]}` : 'Booking ID: #8291'}
+              </span>
+          </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        
-        {/* STATUS */}
-        <div className="flex justify-center">
-            <div className="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
-                {MOCK_DETAILS.status}
-            </div>
-        </div>
+      {/* CONTENIDO PRINCIPAL (Overlap) */}
+      <div className="relative -mt-6 rounded-t-[32px] bg-white px-6 pt-8 pb-6 shadow-sm min-h-[500px]">
+          
+          {/* TITULO Y ESTADO */}
+          <div className="flex justify-between items-start mb-6">
+              <div>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase mb-2 ${
+                      rawStatus === 'confirmed' ? 'bg-green-100 text-green-700' :
+                      rawStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                  }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                          rawStatus === 'confirmed' ? 'bg-green-500' :
+                          rawStatus === 'cancelled' ? 'bg-red-500' :
+                          'bg-yellow-500'
+                      }`} />
+                      {displayStatus}
+                  </div>
+                  <h1 className="text-2xl font-bold text-slate-900 leading-tight">{booking.serviceName}</h1>
+              </div>
+              <div className="text-right">
+                  <span className="block text-2xl font-black text-slate-900">${booking.price}</span>
+                  <span className="text-xs text-slate-400">Total Paid</span>
+              </div>
+          </div>
 
-        {/* PRO CARD */}
-        <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-bold text-slate-400 uppercase mb-4">Professional</h3>
-            <div className="flex items-center gap-4">
-                <img src={MOCK_DETAILS.professional.image} alt="Pro" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-                <div className="flex-1">
-                    <h2 className="font-bold text-slate-900">{MOCK_DETAILS.professional.name}</h2>
-                    <p className="text-sm text-slate-500">{MOCK_DETAILS.professional.role}</p>
-                </div>
-                <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center hover:bg-purple-100 transition">
-                        <MessageCircle size={20} />
-                    </button>
-                    <button className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 transition">
-                        <Phone size={20} />
-                    </button>
-                </div>
-            </div>
-        </div>
+          {/* TARJETA PROFESIONAL */}
+          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
+              <img src={displayImage} alt="Pro" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
+              <div className="flex-1">
+                  <p className="text-xs text-slate-400 font-bold uppercase">Professional</p>
+                  <h3 className="font-bold text-slate-900">{displayName}</h3>
+                  <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                      <ShieldCheck size={12} /> Verified & Vetted
+                  </div>
+              </div>
+              <div className="flex gap-2">
+                  <button className="w-9 h-9 bg-white rounded-full flex items-center justify-center border border-slate-200 text-slate-600 shadow-sm hover:text-purple-600">
+                      <MessageSquare size={16} />
+                  </button>
+                  <button className="w-9 h-9 bg-white rounded-full flex items-center justify-center border border-slate-200 text-slate-600 shadow-sm hover:text-purple-600">
+                      <Phone size={16} />
+                  </button>
+              </div>
+          </div>
 
-        {/* SERVICE */}
-        <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex gap-4">
-             <img src={MOCK_DETAILS.service.image} alt="Svc" className="w-20 h-20 rounded-2xl object-cover" />
-             <div>
-                 <h2 className="font-bold text-lg text-slate-900 leading-tight">{MOCK_DETAILS.service.name}</h2>
-                 <p className="text-slate-500 text-sm mt-1">{MOCK_DETAILS.service.duration} • ${MOCK_DETAILS.service.price}</p>
-                 <div className="flex items-center gap-2 mt-3 text-sm font-medium text-slate-700">
-                    <Calendar size={14} className="text-purple-600" />
-                    {MOCK_DETAILS.schedule.date} at {MOCK_DETAILS.schedule.time}
-                 </div>
-             </div>
-        </div>
-
-        {/* LOCATION */}
-        <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Location</h3>
-            <div className="flex items-start gap-3 mb-4">
-                <MapPin className="text-purple-600 shrink-0 mt-0.5" size={20} />
-                <div>
-                    <p className="font-bold text-slate-900">{MOCK_DETAILS.location.address}</p>
-                    <p className="text-sm text-slate-500">{MOCK_DETAILS.location.city}</p>
-                </div>
-            </div>
-            <div className="h-32 bg-slate-100 rounded-xl w-full relative overflow-hidden flex items-center justify-center">
-                <span className="text-slate-400 text-xs font-bold">Map View Placeholder</span>
-            </div>
-        </div>
-
-        {/* ACTIONS (CONECTADAS) */}
-        <div className="grid grid-cols-2 gap-4 pt-4">
-            <button 
-                onClick={onTrack} // Usamos onTrack para simular seguimiento o reagendar
-                className="flex flex-col items-center justify-center gap-2 bg-white border border-slate-200 p-4 rounded-2xl text-slate-600 font-bold text-sm hover:bg-slate-50 transition"
-            >
-                <RotateCcw size={20} />
-                Track / Rebook
-            </button>
-            <button 
-                onClick={onCancel} 
-                className="flex flex-col items-center justify-center gap-2 bg-red-50 border border-red-100 p-4 rounded-2xl text-red-600 font-bold text-sm hover:bg-red-100 transition"
-            >
-                <XCircle size={20} />
-                Cancel
-            </button>
-        </div>
+          {/* DETALLES (GRID) */}
+          <h3 className="font-bold text-slate-900 mb-4">Appointment Details</h3>
+          <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-purple-600 mb-2 shadow-sm">
+                      <Calendar size={16} />
+                  </div>
+                  <p className="text-xs text-slate-400 mb-0.5">Date</p>
+                  <p className="font-bold text-slate-900">{booking.date || 'Today'}</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-purple-600 mb-2 shadow-sm">
+                      <Clock size={16} />
+                  </div>
+                  <p className="text-xs text-slate-400 mb-0.5">Time</p>
+                  <p className="font-bold text-slate-900">{booking.time || 'ASAP'}</p>
+              </div>
+              <div className="col-span-2 p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-purple-600 shrink-0 shadow-sm">
+                      <MapPin size={16} />
+                  </div>
+                  <div>
+                      <p className="text-xs text-slate-400 mb-0.5">Location ({isHome ? 'Home' : 'Salon'})</p>
+                      <p className="font-bold text-slate-900 text-sm">{displayAddress}</p>
+                  </div>
+              </div>
+          </div>
 
       </div>
+
+      {/* FOOTER ACTIONS */}
+      {rawStatus === 'confirmed' && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 flex gap-3 z-30">
+              <button 
+                onClick={handleCancel}
+                className="flex-1 py-3.5 rounded-2xl border border-red-100 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors"
+              >
+                  <XCircle size={18} /> Cancel
+              </button>
+              
+              {isHome ? (
+                  <button 
+                    onClick={handleTrack}
+                    className="flex-[2] py-3.5 rounded-2xl bg-[#111] text-white font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-slate-800 transition-colors"
+                  >
+                      <Navigation size={18} /> Track Pro
+                  </button>
+              ) : (
+                  <button className="flex-[2] py-3.5 rounded-2xl bg-slate-100 text-slate-400 font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+                      Get Directions
+                  </button>
+              )}
+          </div>
+      )}
     </div>
   );
 }

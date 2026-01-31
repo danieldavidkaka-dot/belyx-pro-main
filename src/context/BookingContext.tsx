@@ -1,131 +1,154 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-// 1. Definimos la estructura de los datos de Consulta
-export interface ConsultationData {
-  hasAllergies: boolean;
-  hasSensitiveSkin: boolean;
-  isPregnant: boolean;
-  notes: string;
-  hasPhotos: boolean;
+// --- TIPOS DE DATOS ---
+interface UserData {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    image: string;
 }
 
-// 2. Definimos el Estado General de la Reserva
-interface BookingState {
-  serviceId: string | null;
-  serviceName: string | null;
-  price: number;
-  professionalId: string | null;
-  professionalName: string | null;
-  date: string | null;
-  time: string | null;
-  locationType: 'salon' | 'home' | null;
+interface BookingData {
+  id?: string;
+  serviceId?: string;
+  serviceName?: string;
+  price?: number;
+  locationType?: 'salon' | 'home';
   address?: string;
-  // Nuevo campo para la consulta médica/notas
-  consultation?: ConsultationData; 
+  professionalId?: string;
+  professionalName?: string;
+  professionalImage?: string; // Agregado para consistencia
+  date?: string;
+  time?: string;
   status: 'draft' | 'confirmed' | 'completed' | 'cancelled';
+  // Datos de consulta
+  hasAllergies?: boolean;
+  hasSensitiveSkin?: boolean;
+  isPregnant?: boolean;
+  notes?: string;
+  hasPhotos?: boolean;
 }
 
-// Estado inicial vacío
-const initialState: BookingState = {
-  serviceId: null,
-  serviceName: null,
-  price: 0,
-  professionalId: null,
-  professionalName: null,
-  date: null,
-  time: null,
-  locationType: null,
-  consultation: undefined, // Empieza vacío
-  status: 'draft',
-};
-
-// 3. Definimos las acciones (Funciones)
 interface BookingContextType {
-  booking: BookingState;
+  // USUARIO
+  user: UserData;
+  updateUser: (data: Partial<UserData>) => void;
+  
+  // RESERVAS
+  booking: BookingData;
+  bookingHistory: BookingData[];
   setService: (id: string, name: string, price: number) => void;
+  setLocation: (type: 'salon' | 'home', address: string) => void;
   setProfessional: (id: string, name: string) => void;
-  setTimeSlot: (date: string, time: string) => void;
-  setLocation: (type: 'salon' | 'home', address?: string) => void;
-  setConsultation: (data: ConsultationData) => void; // <--- NUEVA FUNCIÓN
-  resetBooking: () => void;
+  setConsultation: (data: any) => void;
   confirmBooking: () => void;
+  cancelBooking: (id: string) => void;
+  resetBooking: () => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-// 4. El componente Proveedor
-export const BookingProvider = ({ children }: { children: ReactNode }) => {
-  
-  // A. INICIALIZACIÓN INTELIGENTE (Memoria Persistente)
-  const [booking, setBooking] = useState<BookingState>(() => {
-    try {
-      const saved = localStorage.getItem('bookingState');
-      return saved ? JSON.parse(saved) : initialState;
-    } catch (error) {
-      console.error("Error leyendo localStorage:", error);
-      return initialState;
-    }
+// Valor inicial de Reserva
+const INITIAL_BOOKING_STATE: BookingData = {
+  status: 'draft',
+  price: 0
+};
+
+// Valor inicial de Usuario (Por defecto)
+const INITIAL_USER_STATE: UserData = {
+    name: 'Daniel Barrios',
+    email: 'daniel@belyx.com',
+    phone: '+58 412 123 4567',
+    address: 'Caracas, Venezuela',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'
+};
+
+export function BookingProvider({ children }: { children: ReactNode }) {
+  // ESTADO DE USUARIO
+  const [user, setUser] = useState<UserData>(() => {
+      const savedUser = localStorage.getItem('belyx_user');
+      return savedUser ? JSON.parse(savedUser) : INITIAL_USER_STATE;
   });
 
-  // B. GUARDADO AUTOMÁTICO
+  // ESTADO DE RESERVA ACTUAL
+  const [booking, setBooking] = useState<BookingData>(INITIAL_BOOKING_STATE);
+  
+  // ESTADO DEL HISTORIAL
+  const [bookingHistory, setBookingHistory] = useState<BookingData[]>(() => {
+    const saved = localStorage.getItem('belyx_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // PERSISTENCIA
   useEffect(() => {
-    localStorage.setItem('bookingState', JSON.stringify(booking));
-  }, [booking]);
+    localStorage.setItem('belyx_history', JSON.stringify(bookingHistory));
+  }, [bookingHistory]);
 
-  // --- FUNCIONES (SETTERS) ---
+  useEffect(() => {
+      localStorage.setItem('belyx_user', JSON.stringify(user));
+  }, [user]);
 
+  // --- FUNCIONES DE USUARIO ---
+  const updateUser = (data: Partial<UserData>) => {
+      setUser(prev => ({ ...prev, ...data }));
+  };
+
+  // --- FUNCIONES DE RESERVA ---
   const setService = (id: string, name: string, price: number) => {
     setBooking(prev => ({ ...prev, serviceId: id, serviceName: name, price }));
+  };
+
+  const setLocation = (type: 'salon' | 'home', address: string) => {
+    setBooking(prev => ({ ...prev, locationType: type, address }));
   };
 
   const setProfessional = (id: string, name: string) => {
     setBooking(prev => ({ ...prev, professionalId: id, professionalName: name }));
   };
 
-  const setTimeSlot = (date: string, time: string) => {
-    setBooking(prev => ({ ...prev, date, time }));
-  };
-
-  const setLocation = (type: 'salon' | 'home', address?: string) => {
-    setBooking(prev => ({ ...prev, locationType: type, address: address || '' }));
-  };
-
-  // NUEVA: Guarda los datos de la consulta
-  const setConsultation = (data: ConsultationData) => {
-    setBooking(prev => ({ ...prev, consultation: data }));
-  };
-
-  const resetBooking = () => {
-    setBooking(initialState);
-    localStorage.removeItem('bookingState');
+  const setConsultation = (data: any) => {
+    setBooking(prev => ({ ...prev, ...data }));
   };
 
   const confirmBooking = () => {
-    console.log("CONFIRMADO: Guardando reserva completa...", booking);
+    const finalizedBooking: BookingData = {
+        ...booking,
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: 'confirmed'
+    };
+    setBookingHistory(prev => [finalizedBooking, ...prev]);
     setBooking(prev => ({ ...prev, status: 'confirmed' }));
+  };
+
+  const cancelBooking = (id: string) => {
+    setBookingHistory(prev => prev.map(b => 
+        b.id === id ? { ...b, status: 'cancelled' } : b
+    ));
+  };
+
+  const resetBooking = () => {
+    setBooking(INITIAL_BOOKING_STATE);
   };
 
   return (
     <BookingContext.Provider value={{ 
-      booking, 
-      setService, 
-      setProfessional, 
-      setTimeSlot, 
-      setLocation, 
-      setConsultation, // <--- Exportamos la función
-      resetBooking,
-      confirmBooking 
+      user, updateUser, // Exportamos usuario
+      booking, bookingHistory, 
+      setService, setLocation, setProfessional, setConsultation, 
+      confirmBooking, cancelBooking, resetBooking 
     }}>
       {children}
     </BookingContext.Provider>
   );
-};
+}
 
-// 5. El Hook
-export const useBooking = () => {
+export function useBooking() {
   const context = useContext(BookingContext);
-  if (!context) {
-    throw new Error('useBooking debe usarse dentro de un BookingProvider');
+  if (context === undefined) {
+    throw new Error('useBooking must be used within a BookingProvider');
   }
   return context;
-};
+}

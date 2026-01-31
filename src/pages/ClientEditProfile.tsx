@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Camera, User, Mail, Phone, MapPin, Save, Loader2 } from 'lucide-react';
+import { useBooking } from '../context/BookingContext'; // <--- Importamos cerebro
 
 interface ClientEditProfileProps {
   onBack: () => void;
@@ -8,16 +9,24 @@ interface ClientEditProfileProps {
 
 export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
   const navigate = useNavigate();
+  const { user, updateUser } = useBooking(); // <--- Accedemos a datos y función update
   const [isSaving, setIsSaving] = useState(false);
 
-  // Estado del formulario (Datos iniciales simulados)
+  // Inicializamos con los datos REALES del usuario
   const [formData, setFormData] = useState({
-    name: 'Daniel Barrios',
-    email: 'daniel@belyx.com',
-    phone: '+58 412 123 4567',
-    address: 'Caracas, Venezuela',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    image: ''
   });
+
+  // Cargamos datos al montar el componente
+  useEffect(() => {
+      if (user) {
+          setFormData(user);
+      }
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,11 +37,12 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
     e.preventDefault();
     setIsSaving(true);
     
-    // Simulamos petición al backend
+    // Simulamos carga de red
     setTimeout(() => {
+      updateUser(formData); // <--- Actualizamos el contexto global
       setIsSaving(false);
-      navigate('/profile'); // Regresa al perfil actualizado
-    }, 1500);
+      navigate(-1); // Volvemos atrás
+    }, 1000);
   };
 
   return (
@@ -43,7 +53,7 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
          <button onClick={onBack} className="p-2 -ml-2 text-slate-900 hover:bg-slate-100 rounded-full transition">
              <ChevronLeft size={24} />
          </button>
-         <h1 className="font-bold text-lg">Editar Perfil</h1>
+         <h1 className="font-bold text-lg">Edit Profile</h1>
          <div className="w-8" /> 
       </div>
 
@@ -61,14 +71,14 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
                     <Camera size={18} />
                 </button>
             </div>
-            <p className="text-xs text-slate-400">Toca la cámara para cambiar foto</p>
+            <p className="text-xs text-slate-400">Tap to change photo</p>
         </div>
 
         {/* FORM FIELDS */}
         <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-5">
             
             <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Nombre Completo</label>
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Full Name</label>
                 <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
                     <User size={18} className="text-slate-400" />
                     <input 
@@ -82,7 +92,7 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
             </div>
 
             <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Correo Electrónico</label>
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Email Address</label>
                 <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
                     <Mail size={18} className="text-slate-400" />
                     <input 
@@ -96,7 +106,7 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
             </div>
 
             <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Teléfono</label>
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Phone Number</label>
                 <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
                     <Phone size={18} className="text-slate-400" />
                     <input 
@@ -110,7 +120,7 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
             </div>
 
             <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Ubicación Principal</label>
+                <label className="text-xs font-bold text-slate-500 ml-1 uppercase">Primary Address</label>
                 <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-200 transition-all">
                     <MapPin size={18} className="text-slate-400" />
                     <input 
@@ -135,12 +145,12 @@ export default function ClientEditProfile({ onBack }: ClientEditProfileProps) {
                 {isSaving ? (
                     <>
                         <Loader2 size={20} className="animate-spin" />
-                        Guardando...
+                        Saving...
                     </>
                 ) : (
                     <>
                         <Save size={20} />
-                        Guardar Cambios
+                        Save Changes
                     </>
                 )}
             </button>

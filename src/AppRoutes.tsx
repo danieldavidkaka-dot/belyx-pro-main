@@ -55,7 +55,12 @@ export const AppRoutes = () => {
   };
 
   const handleNavigate = (path: string) => {
-    navigate(path);
+    // Helper para manejar strings de navegación
+    if (path === 'home') navigate(PATHS.CLIENT.HOME);
+    else if (path === 'bookings') navigate(PATHS.CLIENT.BOOKINGS);
+    else if (path === 'wallet') navigate(PATHS.CLIENT.WALLET);
+    else if (path === 'profile') navigate(PATHS.CLIENT.PROFILE);
+    else navigate(path);
   };
 
   return (
@@ -67,6 +72,8 @@ export const AppRoutes = () => {
       {/* RUTAS CLIENTE */}
       <Route element={<ClientLayout />}>
         <Route path={PATHS.CLIENT.HOME} element={<Home onNavigate={handleNavigate} onLogout={handleLogout} />} />
+        
+        {/* MyBookings y MyRewards aún usan props, se mantienen */}
         <Route path={PATHS.CLIENT.BOOKINGS} element={<MyBookings onBack={() => navigate(-1)} onNavigate={handleNavigate} />} />
         <Route path={PATHS.CLIENT.WALLET} element={<MyRewards onBack={() => navigate(-1)} onNavigate={handleNavigate} />} />
         
@@ -80,8 +87,7 @@ export const AppRoutes = () => {
         <Route path="/inbox" element={<ClientInbox onBack={() => navigate(-1)} />} />
       </Route>
 
-      {/* --- AQUÍ ESTABA EL ERROR --- */}
-      {/* Ya NO pasamos props porque los componentes usan useBooking() y useNavigate() */}
+      {/* FLUJO DE RESERVA */}
       <Route path="/booking/services" element={<ServiceSelection />} />
       <Route path="/booking/select-pro" element={<SelectProfessional />} />
       <Route path="/booking/consultation" element={<ServiceConsultation />} />
@@ -90,20 +96,13 @@ export const AppRoutes = () => {
       <Route path="/booking/confirm" element={<ConfirmBooking />} />
       <Route path="/booking/success" element={<BookingSuccess />} />
       
-      {/* TRACKING Y OTROS */}
-      {/* Estos componentes si no los hemos tocado, pueden requerir props. 
-          Si TrackProfessional ya lo actualizaste con mi código anterior, 
-          entonces quítale las props aquí abajo también. 
-          Dejaré las props aquí SOLO si no has actualizado esos archivos aún.
-      */}
-      <Route path="/booking-details/:id" element={<BookingDetails onBack={() => navigate(-1)} onCancel={() => navigate('/booking-cancel')} onTrack={() => navigate('/track-pro')} />} />
-      <Route path="/booking-cancel" element={<CancelBooking onBack={() => navigate(-1)} />} />
-      
-      {/* Si ya actualizaste TrackProfessional, usa la línea comentada abajo: */}
-      {/* <Route path="/track-pro" element={<TrackProfessional />} /> */}
+      {/* DETALLES Y TRACKING (CORREGIDO: Sin props) */}
+      <Route path="/booking-details/:id" element={<BookingDetails />} />
       <Route path="/track-pro" element={<TrackProfessional />} /> 
       
+      {/* OTROS */}
       <Route path="/verify-service" element={<ServiceVerification />} />
+      <Route path="/booking-cancel" element={<CancelBooking onBack={() => navigate(-1)} />} />
 
       {/* RUTAS STAFF */}
       <Route element={<StaffLayout />}>
